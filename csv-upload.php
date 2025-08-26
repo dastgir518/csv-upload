@@ -20,7 +20,7 @@ function csvup_upload_form(){
 }
 
 
-//create tables
+//create tables for database
 register_activation_hook(__FILE__ , 'csvup_activation_callback');
 function csvup_activation_callback(){
     global $wpdb;
