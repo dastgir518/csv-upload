@@ -2,7 +2,7 @@
 <form action="javascript:void(0)" id="csv-up-form">
     <p>
         <label for="">SELECT FILE </label>
-        <input type="file" name="csv_data_file" id="csv_data_file">
+        <input type="file" name="csv_file" id="csv_file">
         <input type="hidden" name="action" value="csv_data_submit">
     </p>
     <P>

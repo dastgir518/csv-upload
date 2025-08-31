@@ -51,9 +51,78 @@ add_action("wp_ajax_csv_data_submit" ,  "csv_ajax_handler");
 add_action("wp_ajax_nopriv_csv_data_submit" ,  "csv_ajax_handler");
 function csv_ajax_handler(){
 
-  echo json_encode(array(
-    "status" => 1,
-    "message" => "success",
-  ));
-  exit;
+    // ✅ Check if required PHP functions exist
+    $required_functions = array("fopen", "fgetcsv", "fclose", "json_encode");
+    foreach($required_functions as $func){
+        if(!function_exists($func)){
+            echo json_encode(array(
+                "status" => 0,
+                "message" => "Missing PHP function: " . $func,
+            ));
+            exit;
+        }
+    }
+
+    // ✅ Check if $wpdb is available
+    global $wpdb;
+    if(!isset($wpdb) || !method_exists($wpdb, 'insert')){
+        echo json_encode(array(
+            "status" => 0,
+            "message" => "Database handler (wpdb) or insert() method missing",
+        ));
+        exit;
+    }
+
+    // ✅ File upload check
+    if(!isset($_FILES['csv_file']) || empty($_FILES['csv_file']['tmp_name'])){
+        echo json_encode(array(
+            "status" => 0,
+            "message" => "CSV file not uploaded",
+        ));
+        exit;
+    }
+
+    $filename = $_FILES['csv_file']['tmp_name'];
+
+    // ✅ Try opening file
+    $handle = fopen($filename , "r");
+    if(!$handle){
+        echo json_encode(array(
+            "status" => 0,
+            "message" => "Unable to open CSV file",
+        ));
+        exit;
+    }
+
+    // ✅ Process file
+    $last_insert = false;
+    while(($data = fgetcsv($handle , 1000 , ",")) !== false){
+        $name   = isset($data[0]) ? $data[0] : '';
+        $rollno = isset($data[1]) ? $data[1] : '';
+        $class  = isset($data[2]) ? $data[2] : '';
+        $grade  = isset($data[3]) ? $data[3] : '';
+
+        $table_name = $wpdb->prefix . "student_data";
+
+        $last_insert = $wpdb->insert(
+            $table_name,
+            array(
+                "name"   => $name,
+                "rollno" => $rollno,
+                "class"  => $class,
+                "grade"  => $grade
+            ),
+            array("%s","%s","%s","%s")
+        );
+    }
+
+    fclose($handle);
+
+    echo json_encode(array(
+        "status" => $last_insert ? 1 : 0,
+        "message" => $last_insert ? "success" : "error",
+    ));
+    exit;
 }
+
+

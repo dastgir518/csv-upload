@@ -12,7 +12,7 @@ jQuery(document).ready(function(){
          success: function (response){
             console.log(response);
          }
-      });
+      }).catch(err => console.error('AJAX error:', err));
 
    });
 });
